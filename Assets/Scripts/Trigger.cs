@@ -12,7 +12,7 @@ public class Trigger : MonoBehaviour {
     public enum TriggerType { EntryTrigger, OutsideTrigger }
     public TriggerType myTriggerType = TriggerType.EntryTrigger;
 
-    public enum Behavior { CloseFrontDoor, DisableMainRoomLight}
+    public enum Behavior { CloseFrontDoor, DisableMainRoomLight, RugForwards, StartPiano}
     public Behavior myBehavior = Behavior.CloseFrontDoor;
 
     public bool triggered = false;
@@ -62,14 +62,49 @@ public class Trigger : MonoBehaviour {
         {
             CloseFrontDoor();
         }
+        if (myBehavior == Behavior.RugForwards)
+        {
+            RugForwards();
+        }
+        if (myBehavior == Behavior.StartPiano)
+        {
+            StartPiano();
+        }
         triggered = true;
     }
 
     void CloseFrontDoor()
     {
         Debug.Log("rot");
-        //door closing sound
-        //shut door
+        controlsScript.StopWindAndCloseDoor();
         affectedObject.transform.Rotate(Vector3.up * 79);
+    }
+
+    void RugForwards()
+    {
+        controlsScript.rustle.Play();
+        StartCoroutine(RugMovementCoroutine(true));
+    }
+
+    void StartPiano()
+    {
+        controlsScript.piano_initial.Play();
+    }
+
+    IEnumerator RugMovementCoroutine(bool forwards)
+    {
+        for(float time = 1f; time >= 0; time -= .03f)
+        {
+            if(forwards)
+            {
+                Debug.Log("yee");
+                affectedObject.transform.position = new Vector3(affectedObject.transform.position.x + .1f, affectedObject.transform.position.y, affectedObject.transform.position.z);
+            }
+            else
+            {
+                affectedObject.transform.position = new Vector3(affectedObject.transform.position.x - .1f, affectedObject.transform.position.y, affectedObject.transform.position.z);
+            }
+            yield return new WaitForSeconds(.03f);
+        }
     }
 }

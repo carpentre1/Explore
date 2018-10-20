@@ -15,6 +15,11 @@ public class Controls : MonoBehaviour {
     public GameObject interactionObject;
     Interaction interactionScript;
 
+    public AudioSource wind;
+    public AudioSource door_close;
+    public AudioSource rustle;
+    public AudioSource piano_initial;
+
     bool isPaused = false;
 
 	// Use this for initialization
@@ -100,5 +105,11 @@ public class Controls : MonoBehaviour {
     {
         Debug.Log("Quitting game");
         Application.Quit();
+    }
+
+    public void StopWindAndCloseDoor()
+    {
+        wind.Stop();
+        door_close.Play();
     }
 }
