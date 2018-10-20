@@ -11,6 +11,8 @@ public class Interaction : MonoBehaviour {
     GameObject manager;
     Controls controlsScript;
 
+    public GameObject affectedObject;
+
 
 
     public enum ActivationType { SingleActivation, CooldownActivation}
@@ -19,8 +21,11 @@ public class Interaction : MonoBehaviour {
     public float cooldown = 0;
     public float interactionDistance = 4;
 
-	// Use this for initialization
-	void Start () {
+    public enum Behavior { StareAtPiano }
+    public Behavior myBehavior = Behavior.StareAtPiano;
+
+    // Use this for initialization
+    void Start () {
         //establish the player
         player = GameObject.FindGameObjectWithTag("Player");
         manager = GameObject.FindGameObjectWithTag("Manager");
@@ -31,15 +36,57 @@ public class Interaction : MonoBehaviour {
 
     public void PerformInteraction()
     {
-        //do what this object should do
-        Debug.Log("interacted!");
+        Debug.Log("Activating trigger");
+        if(activated && myActivationType == ActivationType.SingleActivation)
+        {
+            return;
+        }
+        //all the different behaviors the triggered object can do will be listed here
+        if (myBehavior == Behavior.StareAtPiano)
+        {
+            StareAtPiano();
+        }
+        activated = true;
+        controlsScript.ToggleInteractionText(false, "");
+        controlsScript.interactionObject = null;
+    }
+
+    void StareAtPiano()
+    {
+        player.transform.LookAt(gameObject.transform);
+        player.GetComponent<UnityStandardAssets.Characters.FirstPerson.FirstPersonController>().m_WalkSpeed -= 4.5f;
+        player.GetComponent<UnityStandardAssets.Characters.FirstPerson.FirstPersonController>().m_RunSpeed -= 9.5f;
+        player.GetComponent<UnityStandardAssets.Characters.FirstPerson.FirstPersonController>().ChangeMouseSensitivity(.1f, .1f);
+        controlsScript.piano_initial.Stop();
+        controlsScript.piano_note.Play();
+        StartCoroutine(StaringAtPianoCoroutine());
+    }
+
+    IEnumerator StaringAtPianoCoroutine()
+    {
+        for (float time = 6f; time >= 0; time -= .05f)
+        {
+            player.transform.LookAt(gameObject.transform);
+            yield return new WaitForSeconds(.05f);
+        }
+        controlsScript.piano_note.Stop();
+        controlsScript.squeak.Play();
+        affectedObject.transform.position = new Vector3(affectedObject.transform.position.x, affectedObject.transform.position.y + 1.859f, affectedObject.transform.position.z);
+        player.GetComponent<UnityStandardAssets.Characters.FirstPerson.FirstPersonController>().m_WalkSpeed += 4.5f;
+        player.GetComponent<UnityStandardAssets.Characters.FirstPerson.FirstPersonController>().m_RunSpeed += 9.5f;
+        player.GetComponent<UnityStandardAssets.Characters.FirstPerson.FirstPersonController>().ChangeMouseSensitivity(4, 4);
+
     }
 
     private void OnMouseOver()
     {
         if(tag == "Interactable")
         {
-            if(Vector3.Distance(player.transform.position, gameObject.transform.position) < interactionDistance)
+            if (activated && myActivationType == ActivationType.SingleActivation)
+            {
+                return;
+            }
+            if (Vector3.Distance(player.transform.position, gameObject.transform.position) < interactionDistance)
             {
                 controlsScript.ToggleInteractionText(true, INTERACTION_CONTROL_TEXT + interactionText);
                 //assign player's interaction object

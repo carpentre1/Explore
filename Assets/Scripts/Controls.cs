@@ -19,6 +19,8 @@ public class Controls : MonoBehaviour {
     public AudioSource door_close;
     public AudioSource rustle;
     public AudioSource piano_initial;
+    public AudioSource piano_note;
+    public AudioSource squeak;
 
     bool isPaused = false;
 

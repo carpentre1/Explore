@@ -93,7 +93,11 @@ public class Trigger : MonoBehaviour {
 
     IEnumerator RugMovementCoroutine(bool forwards)
     {
-        for(float time = 1f; time >= 0; time -= .03f)
+        for (float initial_time = .6f; initial_time >= 0; initial_time -= .03f)
+        {
+            yield return new WaitForSeconds(.03f);
+        }
+        for (float time = 1f; time >= 0; time -= .03f)
         {
             if(forwards)
             {
