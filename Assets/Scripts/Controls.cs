@@ -20,6 +20,7 @@ public class Controls : MonoBehaviour {
     public AudioSource rustle;
     public AudioSource piano_initial;
     public AudioSource piano_note;
+    public AudioSource piano_veryspook;
     public AudioSource squeak;
 
     bool isPaused = false;

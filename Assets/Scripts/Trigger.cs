@@ -12,7 +12,7 @@ public class Trigger : MonoBehaviour {
     public enum TriggerType { EntryTrigger, OutsideTrigger }
     public TriggerType myTriggerType = TriggerType.EntryTrigger;
 
-    public enum Behavior { CloseFrontDoor, DisableMainRoomLight, RugForwards, StartPiano}
+    public enum Behavior { CloseFrontDoor, DisableMainRoomLight, RugForwards, StartPiano, LeadingLight1, LeadingLight2, BathroomSpook}
     public Behavior myBehavior = Behavior.CloseFrontDoor;
 
     public bool triggered = false;
@@ -22,6 +22,7 @@ public class Trigger : MonoBehaviour {
     Controls controlsScript;
 
     public GameObject affectedObject;
+    public GameObject secondAffectedObject;
 
     // Use this for initialization
     void Start () {
@@ -70,6 +71,18 @@ public class Trigger : MonoBehaviour {
         {
             StartPiano();
         }
+        if (myBehavior == Behavior.LeadingLight1)
+        {
+            LeadingLight1();
+        }
+        if (myBehavior == Behavior.LeadingLight2)
+        {
+            LeadingLight2();
+        }
+        if (myBehavior == Behavior.BathroomSpook)
+        {
+            BathroomSpook();
+        }
         triggered = true;
     }
 
@@ -89,6 +102,79 @@ public class Trigger : MonoBehaviour {
     void StartPiano()
     {
         controlsScript.piano_initial.Play();
+    }
+    void LeadingLight1()
+    {
+        StartCoroutine(FlickerLightAndMoveCoroutine(9f, Vector3.left));
+    }
+    void LeadingLight2()
+    {
+        StartCoroutine(FlickerLightAndMoveCoroutine(4f, Vector3.forward));
+    }
+    void BathroomSpook()
+    {
+        bool pianoWasPlaying = false;
+        if(controlsScript.piano_initial.isPlaying)
+        {
+            controlsScript.piano_initial.Pause();
+            pianoWasPlaying = true;
+        }
+        controlsScript.piano_veryspook.Play();
+        secondAffectedObject.SetActive(true);
+        StartCoroutine(BathroomLightColorShift(pianoWasPlaying));
+    }
+
+    IEnumerator BathroomLightColorShift(bool pianoWasPlaying)
+    {
+        var startColor = Color.green;
+        var endColor = Color.red;
+        float curColor = 0;
+        float fadeTime = 6f;
+        Light theLight = affectedObject.GetComponent<Light>();
+        theLight.enabled = true;
+        theLight.color = Color.green;
+
+        while(curColor <= 1)
+        {
+            curColor += Time.deltaTime / fadeTime;
+            theLight.color = Color.Lerp(startColor, endColor, curColor);
+            yield return new WaitForSeconds(.01f);
+        }
+
+        for (float time = 4f; time >= 0; time -= .01f)
+        {
+            controlsScript.piano_veryspook.volume -= controlsScript.piano_veryspook.volume * .01f;
+            yield return new WaitForSeconds(.01f);
+        }
+
+        theLight.enabled = false;
+        controlsScript.piano_veryspook.Stop();
+        secondAffectedObject.SetActive(false);
+        if (pianoWasPlaying)
+        {
+            controlsScript.piano_initial.UnPause();
+        }
+    }
+
+    IEnumerator FlickerLightAndMoveCoroutine(float distance, Vector3 dir)
+    {
+        Light theLight = affectedObject.GetComponent<Light>();
+        theLight.enabled = true;
+        float origIntensity = theLight.intensity;
+        theLight.intensity = 0;
+        for (float time = 1.5f; time >= 0; time -= .01f)
+        {
+            theLight.intensity += origIntensity * .01f;
+            affectedObject.transform.Translate(dir * Time.deltaTime * distance);
+            yield return new WaitForSeconds(.01f);
+        }
+        for (float time = 1.5f; time >= 0; time -= .01f)
+        {
+            theLight.intensity -= origIntensity * .01f;
+            affectedObject.transform.Translate(dir * Time.deltaTime * distance);
+            yield return new WaitForSeconds(.01f);
+        }
+        Debug.Log("finished");
     }
 
     IEnumerator RugMovementCoroutine(bool forwards)
